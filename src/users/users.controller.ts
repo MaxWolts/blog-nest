@@ -1,4 +1,5 @@
 import { Controller, Get, Param, NotFoundException, Post, Body, Delete, Put } from '@nestjs/common';
+import { CreateUserDto, UpdateUserDto } from './user.dto';
 
 interface User {
   id: string;
@@ -40,7 +41,7 @@ export class UsersController {
   }
 
   @Post()
-  createUser(@Body() userData: Omit<User, 'id'>) {
+  createUser(@Body() userData: CreateUserDto) {
     if (!isValidEmail(userData.email)) {
       throw new NotFoundException("Invalid email format");
     }
@@ -59,7 +60,7 @@ export class UsersController {
 
 
   @Put(':id')
-  updateUser(@Param('id') id: string, @Body() userData: Partial<Omit<User, 'id'>>) {
+  updateUser(@Param('id') id: string, @Body() userData: UpdateUserDto) {
     const userIndex = this.users.findIndex(user => user.id === id);
     if (userIndex === -1) throw new NotFoundException("User not found");
     const updatedUser = { ...this.users[userIndex], ...userData };
