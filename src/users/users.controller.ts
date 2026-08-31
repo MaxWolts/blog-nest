@@ -1,11 +1,7 @@
 import { Controller, Get, Param, NotFoundException, Post, Body, Delete, Put } from '@nestjs/common';
 import { CreateUserDto, UpdateUserDto } from './user.dto';
+import { UsersService } from './users.service';
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-}
 
 function isValidEmail(email: string): boolean {
   if (typeof email !== 'string') return false;
@@ -15,27 +11,16 @@ function isValidEmail(email: string): boolean {
 
 @Controller('users')
 export class UsersController {
-  private users: User[] = [
-    {
-      id: "1",
-      name: "Max W",
-      email: "max@gmail.com"
-    },
-    {
-      id: "2",
-      name: "Max 2",
-      email: "max@gmail.com"
-    }
-  ]
+  constructor(private usersService: UsersService) {}
 
   @Get()
-  getUsers(): User[] {
-    return this.users;
+  getUsers() {
+    return this.usersService.findAll();
   }
 
   @Get(':id')
   getUser(@Param('id') id: string) {
-    const user = this.users.find(user => user.id === id);
+    const user = this.usersService.getUserById(id);
     if (user) return user;
     else throw new NotFoundException("User not found");
   }
@@ -46,29 +31,18 @@ export class UsersController {
       throw new NotFoundException("Invalid email format");
     }
     const newUser = { ...userData, id: Date.now().toString() };
-    this.users.push(newUser);
-    return newUser;
+    return this.usersService.create(newUser);
   }
 
   @Delete(':id')
   deleteUser(@Param('id') id: string) {
-    const userIndex = this.users.findIndex(user => user.id === id);
-    if (userIndex === -1) throw new NotFoundException("User not found");
-    const deletedUser = this.users.splice(userIndex, 1)[0];
-    return deletedUser;
+    return this.usersService.delete(id);
   }
 
 
   @Put(':id')
   updateUser(@Param('id') id: string, @Body() userData: UpdateUserDto) {
-    const userIndex = this.users.findIndex(user => user.id === id);
-    if (userIndex === -1) throw new NotFoundException("User not found");
-    const updatedUser = { ...this.users[userIndex], ...userData };
-    if (userData.email && !isValidEmail(userData.email)) {
-      throw new NotFoundException("Invalid email format");
-    }
-    this.users[userIndex] = updatedUser;
-    return updatedUser;
+    return this.usersService.update(id, userData);
   }
 }
 
